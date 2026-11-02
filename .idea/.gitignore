@@ -1,0 +1,18 @@
+.env
+*.pem
+*.key
+
+# backend (Java/Maven)
+target/
+*.class
+*.log
+
+# frontend (React)
+node_modules/
+dist/
+build/
+
+# editors aur OS
+.idea/
+.vscode/
+.DS_Store
