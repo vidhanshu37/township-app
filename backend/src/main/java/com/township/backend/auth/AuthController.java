@@ -32,6 +32,7 @@ public class AuthController {
         return new RequestOtpResponse("If the number is registered, an OTP has been sent", demoOtp);
     }
 
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtp req) {
         return auth.verify(req.phone(), req.otp())
