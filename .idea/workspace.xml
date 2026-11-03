@@ -4,10 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="198d50be-c7b6-4703-936b-cdca0359e666" name="Changes" comment="feat(db): add initial schema for flats, users and audit log">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/JwtConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/SecurityConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V2__seed_demo_users.sql" afterDir="false" />
+    <list default="true" id="198d50be-c7b6-4703-936b-cdca0359e666" name="Changes" comment="feat(auth): add security config with stateless jwt, role rules and cors">
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/AuthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/AuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/MeController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/OtpService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/township/backend/auth/TokenService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V3__otp_challenge.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/test/java/com/township/backend/auth/TokenServiceTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
@@ -43,12 +47,22 @@
     &quot;assignee&quot;: &quot;vidhanshu37&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/vidhanshu37/township-app.git&quot;,
-    &quot;accountId&quot;: &quot;8ca0c31a-7640-44b9-8c85-b8de2f6ea4c1&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/vidhanshu37/township-app.git",
+    "accountId": "8ca0c31a-7640-44b9-8c85-b8de2f6ea4c1"
+  },
+  "recentNewPullRequestHead": {
+    "server": {
+      "useHttp": false,
+      "host": "github.com",
+      "port": null,
+      "suffix": null
+    },
+    "owner": "vidhanshu37",
+    "repository": "township-app"
   }
-}</component>
+}]]></component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -64,6 +78,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "JUnit.TokenServiceTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RequestMappingsPanelOrder0": "0",
     "RequestMappingsPanelOrder1": "1",
@@ -77,7 +92,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.BackendApplication.executor": "Run",
     "Spring Boot.TownshipBackendApplication.executor": "Run",
-    "git-widget-placeholder": "feature/auth",
+    "git-widget-placeholder": "#1 on feature/auth",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/springboot_learning/township-app",
@@ -95,7 +110,7 @@
       <recent name="D:\springboot_learning\township-app" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="JUnit.TokenServiceTest">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="township-app" />
       <working_directory value="$PROJECT_DIR$" />
@@ -115,6 +130,21 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
+    <configuration name="TokenServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.township.backend.auth.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.township.backend.auth" />
+      <option name="MAIN_CLASS_NAME" value="com.township.backend.auth.TokenServiceTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="BackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="backend" />
       <selectedOptions>
@@ -125,6 +155,15 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="JUnit.TokenServiceTest" />
+      <item itemvalue="Spring Boot.BackendApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.TokenServiceTest" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -144,7 +183,7 @@
       <workItem from="1793641964508" duration="3449000" />
       <workItem from="1793645920245" duration="2797000" />
       <workItem from="1793648946106" duration="1045000" />
-      <workItem from="1793673969088" duration="7278000" />
+      <workItem from="1793673969088" duration="13794000" />
     </task>
     <task id="LOCAL-00001" summary="chore: add docker-compose with postgres config">
       <option name="closed" value="true" />
@@ -162,7 +201,15 @@
       <option name="project" value="LOCAL" />
       <updated>1793689787729</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="feat(auth): add security config with stateless jwt, role rules and cors">
+      <option name="closed" value="true" />
+      <created>1793717602229</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1793717602229</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -171,7 +218,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="chore: add docker-compose with postgres config" />
     <MESSAGE value="feat(db): add initial schema for flats, users and audit log" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(db): add initial schema for flats, users and audit log" />
+    <MESSAGE value="feat(auth): add security config with stateless jwt, role rules and cors" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(auth): add security config with stateless jwt, role rules and cors" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
