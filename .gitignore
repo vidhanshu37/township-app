@@ -1,18 +1,19 @@
+# secrets
 .env
 *.pem
 *.key
 
-# backend (Java/Maven)
+# backend
 target/
 *.class
 *.log
 
-# frontend (React)
+# frontend
 node_modules/
 dist/
 build/
 
-# editors aur OS
+# editors and OS
 .idea/
 .vscode/
 .DS_Store

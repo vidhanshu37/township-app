@@ -1,0 +1,28 @@
+spring:
+  config:
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
+  application:
+    name: township-backend
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+app:
+  name: township-backend
+  jwt:
+    secret: ${JWT_SECRET}
+    expiry-minutes: 60
+  cors:
+    allowed-origins: http://localhost:5173
+  demo-mode: ${APP_DEMO_MODE:false}
+
+
+server:
+  port: 8085
