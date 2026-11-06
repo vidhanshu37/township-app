@@ -15,14 +15,18 @@ spring:
     enabled: true
 
 app:
-  name: township-backend
   jwt:
     secret: ${JWT_SECRET}
     expiry-minutes: 60
   cors:
     allowed-origins: http://localhost:5173
   demo-mode: ${APP_DEMO_MODE:false}
-
+  billing:
+    rate-per-sqft: 6.50
+    due-day: 10
+    late-fee-rate: 0.18
+  payments:
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET}
 
 server:
   port: 8085
