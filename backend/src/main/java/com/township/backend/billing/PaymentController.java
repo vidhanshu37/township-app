@@ -4,14 +4,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -22,6 +20,7 @@ public class PaymentController {
 
     public record CreateOrder(@DecimalMin("1.00") @Digits(integer = 10, fraction = 2) BigDecimal amount) {}
     public record Webhook(@NotBlank String orderId, @NotBlank String paymentId, @NotBlank String signature) {}
+    public record Reverse(@NotBlank @Size(max = 200) String reason) {}
 
     private final PaymentService payments;
     private final boolean demoMode;
@@ -50,6 +49,19 @@ public class PaymentController {
     @PostMapping("/api/payments/webhook")
     public PaymentService.Result webhook(@Valid @RequestBody Webhook body) {
         return payments.handlePaid(body.orderId(), body.paymentId(), body.signature());
+    }
+
+
+    @GetMapping("/api/resident/payments/{paymentId}/receipt")
+    public PaymentService.Receipt receipt(@PathVariable String paymentId, @AuthenticationPrincipal Jwt jwt) {
+        return payments.receipt(paymentId, flatId(jwt));
+    }
+
+    @PostMapping("/api/helpdesk/payments/{paymentId}/reverse")
+    public PaymentService.Result reverse(@PathVariable String paymentId,
+                                         @Valid @RequestBody Reverse body,
+                                         @AuthenticationPrincipal Jwt jwt) {
+        return payments.reverse(paymentId, body.reason(), Long.parseLong(jwt.getSubject()));
     }
 
     private long flatId(Jwt jwt) {
