@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/resident/**").hasRole("RESIDENT")
                         .requestMatchers("/api/helpdesk/**").hasRole("HELP_DESK")
                         .requestMatchers("/api/committee/**").hasRole("COMMITTEE")
+                        .requestMatchers("/api/auth/**", "/actuator/health", "/api/payments/webhook").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
