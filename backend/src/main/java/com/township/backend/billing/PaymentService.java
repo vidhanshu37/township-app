@@ -213,4 +213,30 @@ public class PaymentService {
                 .optional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
     }
+
+    public void allocateToLedger(long flatId, String paymentId, BigDecimal amount) {
+        List<PaymentAllocator.OpenBill> open = jdbc.sql("""
+                    SELECT b.id, SUM(l.amount) AS outstanding
+                    FROM bills b JOIN ledger_entry l ON l.bill_id = b.id
+                    WHERE b.flat_id = :f
+                    GROUP BY b.id, b.period
+                    HAVING SUM(l.amount) > 0
+                    ORDER BY b.period""")
+                .param("f", flatId)
+                .query((rs, n) -> new PaymentAllocator.OpenBill(rs.getLong("id"), rs.getBigDecimal("outstanding")))
+                .list();
+
+        for (PaymentAllocator.Line line : PaymentAllocator.allocate(open, amount)) {
+            boolean advance = line.billId() == null;
+            jdbc.sql("""
+                INSERT INTO ledger_entry (flat_id, bill_id, entry_type, amount, reference)
+                VALUES (:f, :b, :t, :a, :r)""")
+                    .param("f", flatId)
+                    .param("b", line.billId(), Types.BIGINT)
+                    .param("t", advance ? "ADVANCE" : "PAYMENT")
+                    .param("a", line.amount().negate())
+                    .param("r", paymentId)
+                    .update();
+        }
+    }
 }
