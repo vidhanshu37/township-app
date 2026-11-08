@@ -17,6 +17,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  web:
+    error:
+      include-message: always
 
 app:
   jwt:
