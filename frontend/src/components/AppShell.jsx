@@ -11,7 +11,12 @@ const NAV = {
     { to: '/resident/ledger', label: 'Ledger' },
     { to: '/resident/complaints', label: 'Complaints' },
   ],
-  HELP_DESK: [],
+  HELP_DESK: [
+    { to: '/helpdesk/statements', label: 'Statements' },
+    { to: '/helpdesk/payments', label: 'Payments' },
+    { to: '/helpdesk/billing', label: 'Billing' },
+    { to: '/helpdesk/complaints', label: 'Complaints' },
+  ],
   COMMITTEE: [],
 };
 
@@ -19,7 +24,6 @@ export default function AppShell() {
   const { user, signOut } = useAuth();
   const { pathname } = useLocation();
   const items = NAV[user.role] ?? [];
-  const wide = user.role !== 'RESIDENT';
   // the Dues screen already shows the big nameplate, so the small one would only repeat it
   const showSmallPlate = user.role === 'RESIDENT' && user.flatNo && pathname !== '/resident';
 
@@ -45,7 +49,7 @@ export default function AppShell() {
           </nav>
         ) : null}
       </header>
-      <main id="main" className={wide ? 'page page-wide' : 'page'}>
+      <main id="main" className={user.role === 'COMMITTEE' ? 'page page-dash' : 'page'}>
         <Outlet />
       </main>
     </>

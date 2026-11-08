@@ -38,7 +38,26 @@ const ORDERS = new Map();
 const PAYMENTS = new Map();
 const LEDGER = {};
 const COMPLAINTS = {};
-let complaintSeq = 0;
+let complaintSeq = 100;
+const GENERATED = new Set();
+let lateFeeRuns = 0;
+const EVENTS = {};
+const TXNS = [
+  { id: 1, fileId: 1, lineNo: 2, date: '2026-11-03', narration: 'UPI/TWN0002/maintenance nov', amount: 6370.0, utr: 'UTR1001', status: 'AUTO_MATCHED', flatId: 2, flatNo: 'T12-0408', score: 90, reasons: 'reference, flat, amount', note: null, resolutionNote: null, paymentId: 'bank_1', paymentStatus: 'SUCCESS' },
+  { id: 2, fileId: 1, lineNo: 3, date: '2026-11-04', narration: 'NEFT Kulkarni N maintenance', amount: 7475.0, utr: 'UTR1002', status: 'NEEDS_REVIEW', flatId: 1, flatNo: 'T07-1203', score: 55, reasons: 'amount, name', note: null, resolutionNote: null, paymentId: null, paymentStatus: null },
+  { id: 3, fileId: 1, lineNo: 4, date: '2026-11-05', narration: 'IMPS from Shaikh A', amount: 5000.0, utr: null, status: 'NEEDS_REVIEW', flatId: null, flatNo: null, score: 35, reasons: 'name', note: null, resolutionNote: null, paymentId: null, paymentStatus: null },
+  { id: 4, fileId: 1, lineNo: 5, date: '2026-11-05', narration: 'CASH DEPOSIT', amount: 1234.0, utr: null, status: 'UNMATCHED', flatId: null, flatNo: null, score: 0, reasons: '', note: null, resolutionNote: null, paymentId: null, paymentStatus: null },
+];
+const HD_PAYMENTS = [
+  { paymentId: 'pay_aaaa1111', orderId: 'order_1', flatNo: 'T07-1203', amount: 7475.0, status: 'SUCCESS', source: 'GATEWAY', paidAt: '2026-11-06T10:15:00+05:30' },
+  { paymentId: 'bank_1', orderId: null, flatNo: 'T12-0408', amount: 6370.0, status: 'SUCCESS', source: 'BANK', paidAt: '2026-11-03T00:00:00+05:30' },
+  { paymentId: 'pay_bbbb2222', orderId: 'order_2', flatNo: 'T21-1601', amount: 500.0, status: 'REVERSED', source: 'GATEWAY', paidAt: '2026-11-01T09:00:00+05:30' },
+];
+const SEED = [
+  { id: 1, flatId: 3, flatNo: 'T21-1601', text: 'Water leakage from ceiling in the bathroom, getting worse', category: 'PLUMBING', priority: 'MEDIUM', status: 'OPEN', triageSource: 'RULES', triageReason: 'matched keyword: leakage', duplicateOf: null, assignedTo: null, createdAt: '2026-11-07T09:00:00+05:30', updatedAt: '2026-11-07T09:00:00+05:30' },
+  { id: 2, flatId: 2, flatNo: 'T12-0408', text: 'Corridor light not working near lift lobby', category: 'ELECTRICAL', priority: 'LOW', status: 'IN_PROGRESS', triageSource: 'RULES', triageReason: 'matched keyword: light', duplicateOf: null, assignedTo: 10, createdAt: '2026-11-06T18:00:00+05:30', updatedAt: '2026-11-07T10:00:00+05:30' },
+];
+function allComplaints() { return [...Object.values(COMPLAINTS).flat(), ...SEED].sort((a, b) => b.id - a.id); }
 
 function send(res, status, body) {
   if (body === undefined) {
@@ -163,6 +182,86 @@ http.createServer(async (req, res) => {
     return send(res, 201, c);
   }
   if (route === 'GET /api/resident/complaints' && me.role === 'RESIDENT') return send(res, 200, COMPLAINTS[me.phone] || []);
+
+  if (route === 'GET /api/committee/dashboard' && me.role === 'COMMITTEE') {
+    const period = url.searchParams.get('period') || '2026-11';
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return send(res, 400, { status: 400, message: 'period must look like 2026-11' });
+    if (period === '2026-01') return send(res, 500, { status: 500 });
+    const empty = period === '2025-01';
+    return send(res, 200, {
+      period, asOf: '2026-11-08',
+      money: empty ? { periodBilled: 0, periodOutstanding: 0, periodCollectionRatePercent: 0, collectedInPeriod: 0, totalDues: 0, advanceCredit: 0 }
+        : { periodBilled: 42175.0, periodOutstanding: 28400.0, periodCollectionRatePercent: 32.7, collectedInPeriod: 21075.0, totalDues: 35258.0, advanceCredit: 630.0 },
+      overdue: empty ? { amount: 0, flats: 0, days1to30: 0, days31to60: 0, days61plus: 0 } : { amount: 12887.64, flats: 2, days1to30: 5710.24, days31to60: 0, days61plus: 7177.4 },
+      topDefaulters: empty ? [] : [{ flatNo: 'T12-0408', overdueAmount: 7177.4, oldestDueDate: '2026-09-10', daysOverdue: 59 }, { flatNo: 'T21-1601', overdueAmount: 5710.24, oldestDueDate: '2026-10-10', daysOverdue: 29 }],
+      reconciliation: empty ? { countByStatus: { AUTO_MATCHED: 0, NEEDS_REVIEW: 0, UNMATCHED: 0, CONFIRMED: 0, REJECTED: 0 }, pendingReview: 0, unattributedAmount: 0 }
+        : { countByStatus: { AUTO_MATCHED: 3, NEEDS_REVIEW: 2, UNMATCHED: 2, CONFIRMED: 1, REJECTED: 1 }, pendingReview: 2, unattributedAmount: 6234.0 },
+      complaints: empty ? { byStatus: { OPEN: 0, IN_PROGRESS: 0, RESOLVED: 0 }, openByPriority: { HIGH: 0, MEDIUM: 0, LOW: 0 }, openByCategory: { PLUMBING: 0, OTHER: 0 }, openHighPriority: 0, openLinkedDuplicates: 0, avgResolutionHoursLast30Days: 0 }
+        : { byStatus: { OPEN: 3, IN_PROGRESS: 1, RESOLVED: 4 }, openByPriority: { HIGH: 1, MEDIUM: 2, LOW: 1 }, openByCategory: { PLUMBING: 2, ELECTRICAL: 1, LIFT: 1, SECURITY: 0, SAFETY: 0, HOUSEKEEPING: 0, PARKING: 0, NOISE: 0, OTHER: 0 }, openHighPriority: 1, openLinkedDuplicates: 1, avgResolutionHoursLast30Days: 26.5 },
+    });
+  }
+
+  // ---- help desk ----
+  if (me.role === 'HELP_DESK') {
+    if (route === 'GET /api/helpdesk/flats') return send(res, 200, [
+      { id: 1, flatNo: 'T07-1203', tower: 'T07', residentName: 'Neeraj Kulkarni' },
+      { id: 2, flatNo: 'T12-0408', tower: 'T12', residentName: 'Swati Joshi' },
+      { id: 3, flatNo: 'T21-1601', tower: 'T21', residentName: 'Aamir Shaikh' },
+      { id: 4, flatNo: 'T03-0101', tower: 'T03', residentName: null }]);
+    if (route === 'POST /api/helpdesk/bills/generate') {
+      const { period } = await readBody(req);
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period || '')) return send(res, 400, { status: 400, message: 'Validation failed' });
+      const n = GENERATED.has(period) ? 0 : 5; GENERATED.add(period);
+      return send(res, 200, { period, billsCreated: n });
+    }
+    if (route === 'POST /api/helpdesk/late-fees/apply') { const n = lateFeeRuns++ === 0 ? 3 : 0; return send(res, 200, { lateFeesPosted: n }); }
+    if (route === 'POST /api/helpdesk/statements') {
+      await readBody(req);
+      return send(res, 200, { fileId: 1, totalRows: 9, credits: 7, debitsIgnored: 1, duplicates: 0, autoMatched: 3, needsReview: 2, unmatched: 2, errors: [{ lineNo: 8, message: 'invalid date: 31/02/2026' }] });
+    }
+    if (route === 'GET /api/helpdesk/bank-txns') {
+      const st = url.searchParams.get('status');
+      if (!['AUTO_MATCHED', 'NEEDS_REVIEW', 'UNMATCHED', 'CONFIRMED', 'REJECTED'].includes(st)) return send(res, 400, { status: 400, message: 'Unknown status: ' + st });
+      return send(res, 200, TXNS.filter((t) => t.status === st));
+    }
+    let tm = /^POST \/api\/helpdesk\/bank-txns\/(\d+)\/(confirm|reject)$/.exec(route);
+    if (tm) {
+      const t = TXNS.find((x) => x.id === Number(tm[1]));
+      if (!t) return send(res, 404, { status: 404 });
+      if (!['NEEDS_REVIEW', 'UNMATCHED'].includes(t.status)) return send(res, 409, { status: 409, message: 'This payment was already handled' });
+      const b = await readBody(req);
+      if (tm[2] === 'confirm') { t.status = 'CONFIRMED'; t.flatId = b.flatId; t.flatNo = { 1: 'T07-1203', 2: 'T12-0408', 3: 'T21-1601', 4: 'T03-0101' }[b.flatId]; t.resolutionNote = b.note; t.paymentId = 'bank_' + t.id; t.paymentStatus = 'SUCCESS'; }
+      else { t.status = 'REJECTED'; t.resolutionNote = b.reason; }
+      return send(res, 200, t);
+    }
+    if (route === 'GET /api/helpdesk/payments') return send(res, 200, HD_PAYMENTS);
+    tm = /^POST \/api\/helpdesk\/payments\/([^/]+)\/reverse$/.exec(route);
+    if (tm) {
+      const p = HD_PAYMENTS.find((x) => x.paymentId === tm[1]);
+      if (!p) return send(res, 404, { status: 404 });
+      if (p.status === 'REVERSED') return send(res, 409, { status: 409, message: 'Payment is already reversed' });
+      p.status = 'REVERSED'; return send(res, 200, { status: 'REVERSED' });
+    }
+    if (route === 'GET /api/helpdesk/complaints') {
+      const st = url.searchParams.get('status'), pr = url.searchParams.get('priority');
+      return send(res, 200, allComplaints().filter((c) => (!st || c.status === st) && (!pr || c.priority === pr)));
+    }
+    tm = /^GET \/api\/helpdesk\/complaints\/(\d+)$/.exec(route);
+    if (tm) {
+      const c = allComplaints().find((x) => x.id === Number(tm[1]));
+      return c ? send(res, 200, { complaint: c, events: EVENTS[c.id] || [{ eventType: 'CREATED', fromStatus: null, toStatus: 'OPEN', note: null, actorId: null, createdAt: c.createdAt }] }) : send(res, 404, { status: 404 });
+    }
+    tm = /^POST \/api\/helpdesk\/complaints\/(\d+)\/status$/.exec(route);
+    if (tm) {
+      const c = allComplaints().find((x) => x.id === Number(tm[1]));
+      if (!c) return send(res, 404, { status: 404 });
+      const b = await readBody(req);
+      const ok = { OPEN: ['IN_PROGRESS', 'RESOLVED'], IN_PROGRESS: ['OPEN', 'RESOLVED'], RESOLVED: ['OPEN'] }[c.status];
+      if (!ok.includes(b.status)) return send(res, 409, { status: 409, message: 'Cannot move from ' + c.status + ' to ' + b.status });
+      (EVENTS[c.id] ||= [{ eventType: 'CREATED', fromStatus: null, toStatus: 'OPEN', note: null, actorId: null, createdAt: c.createdAt }]).push({ eventType: 'STATUS_CHANGED', fromStatus: c.status, toStatus: b.status, note: b.note, actorId: 10, createdAt: new Date().toISOString() });
+      c.status = b.status; return send(res, 200, c);
+    }
+  }
 
   return send(res, 404, { status: 404, error: 'Not Found' });
 }).listen(PORT, () => console.log(`mock API on http://localhost:${PORT}  (OTP is always ${OTP})`));
