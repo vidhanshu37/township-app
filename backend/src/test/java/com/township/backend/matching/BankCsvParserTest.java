@@ -41,6 +41,13 @@ class BankCsvParserTest {
     }
 
     @Test
+    void excelBomAndWindowsLineEndingsAreHandled() {
+        var r = BankCsvParser.parse("\uFEFFdate,narration,credit\r\n2026-11-05,a,10.00\r\n");
+        assertEquals(1, r.credits().size());
+        assertEquals(0, r.errors().size());
+    }
+
+    @Test
     void negativeAndThreeDecimalAmountsAreErrors() {
         var r = BankCsvParser.parse("date,narration,credit\n2026-11-05,a,-5.00\n2026-11-05,b,1.234\n");
         assertEquals(0, r.credits().size());

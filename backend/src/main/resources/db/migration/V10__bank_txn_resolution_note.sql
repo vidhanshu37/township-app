@@ -1,0 +1,1 @@
+ALTER TABLE bank_txn ADD COLUMN resolution_note VARCHAR(200);

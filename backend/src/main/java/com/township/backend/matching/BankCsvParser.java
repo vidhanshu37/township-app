@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+// Parses a bank CSV with header: date, narration, credit [, debit] [, utr] (any order, any case).
+ // Bad rows are reported, never thrown, so one bad line cannot kill the upload.
 
 public final class BankCsvParser {
 
@@ -23,6 +25,9 @@ public final class BankCsvParser {
     private BankCsvParser() {}
 
     public static Result parse(String content) {
+        if (content.startsWith("\uFEFF")) {
+            content = content.substring(1); // Excel adds a BOM to CSV files
+        }
         String[] lines = content.replace("\r\n", "\n").replace('\r', '\n').split("\n", -1);
         int h = 0;
         while (h < lines.length && lines[h].isBlank()) {
@@ -75,7 +80,7 @@ public final class BankCsvParser {
     }
 
     static BigDecimal amount(String raw) {
-        String s = raw.replace("₹", "").replace("Rs.", "").replace("Rs", "").replace(",", "").trim();
+        String s = raw.replace("\u20B9", "").replace("Rs.", "").replace("Rs", "").replace(",", "").trim();
         if (s.isEmpty()) {
             return BigDecimal.ZERO;
         }
@@ -96,7 +101,6 @@ public final class BankCsvParser {
             try {
                 return LocalDate.parse(s, f);
             } catch (DateTimeParseException ignored) {
-                // try next format
             }
         }
         throw new IllegalArgumentException("invalid date: " + raw);
