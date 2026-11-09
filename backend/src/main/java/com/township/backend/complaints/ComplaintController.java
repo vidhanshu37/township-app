@@ -1,6 +1,8 @@
 package com.township.backend.complaints;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,12 @@ public class ComplaintController {
     public record ChangeStatus(@NotBlank String status, @Size(max = 200) String note) {
     }
 
+    public record ChangeCategory(@NotBlank String category) {
+    }
+
+    public record Rate(@Min(1) @Max(5) int rating, @Size(max = 300) String comment) {
+    }
+
     private final ComplaintService complaints;
 
     public ComplaintController(ComplaintService complaints) {
@@ -41,6 +49,17 @@ public class ComplaintController {
     @GetMapping("/api/resident/complaints")
     public List<ComplaintService.ComplaintView> mine(@AuthenticationPrincipal Jwt jwt) {
         return complaints.listForFlat(flatId(jwt));
+    }
+
+    @GetMapping("/api/resident/complaints/{id}")
+    public ComplaintService.Detail mineDetail(@PathVariable long id, @AuthenticationPrincipal Jwt jwt) {
+        return complaints.detailForFlat(id, flatId(jwt));
+    }
+
+    @PostMapping("/api/resident/complaints/{id}/rating")
+    public ComplaintService.ComplaintView rate(@PathVariable long id, @Valid @RequestBody Rate body,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        return complaints.rate(id, flatId(jwt), Long.parseLong(jwt.getSubject()), body.rating(), body.comment());
     }
 
     @GetMapping("/api/helpdesk/complaints")
@@ -61,6 +80,13 @@ public class ComplaintController {
     public ComplaintService.ComplaintView changeStatus(@PathVariable long id, @Valid @RequestBody ChangeStatus body,
                                                        @AuthenticationPrincipal Jwt jwt) {
         return complaints.changeStatus(id, body.status(), body.note(), Long.parseLong(jwt.getSubject()));
+    }
+
+    @PostMapping("/api/helpdesk/complaints/{id}/category")
+    public ComplaintService.ComplaintView changeCategory(@PathVariable long id,
+                                                         @Valid @RequestBody ChangeCategory body,
+                                                         @AuthenticationPrincipal Jwt jwt) {
+        return complaints.changeCategory(id, body.category(), Long.parseLong(jwt.getSubject()));
     }
 
     private long flatId(Jwt jwt) {
