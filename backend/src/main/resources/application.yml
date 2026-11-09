@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
   config:
     import: optional:file:.env[.properties],optional:file:../.env[.properties]
   application:
@@ -13,16 +17,23 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  web:
+    error:
+      include-message: always
 
 app:
-  name: township-backend
   jwt:
     secret: ${JWT_SECRET}
     expiry-minutes: 60
   cors:
     allowed-origins: http://localhost:5173
   demo-mode: ${APP_DEMO_MODE:false}
-
+  billing:
+    rate-per-sqft: 6.50
+    due-day: 10
+    late-fee-rate: 0.18
+  payments:
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET}
 
 server:
   port: 8085
