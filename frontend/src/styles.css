@@ -1,4 +1,3 @@
-/* Township: concrete, slate ink, and one enamel nameplate. */
 :root {
   --concrete: #e8ebee;
   --paper: #ffffff;
@@ -280,3 +279,15 @@ a { color: var(--gate); text-underline-offset: 3px; }
 .table tbody th { font-weight: 700; }
 .table .r { text-align: right; }
 @media (max-width: 480px) { .table { font-size: 14px; } .table th:nth-child(3), .table td:nth-child(3) { display: none; } }
+
+/* complaints: reply deadline, photos, rating */
+.sla-late { font-size: 14px; color: var(--due); font-weight: 600; }
+.photo-strip { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.photo-strip img { width: 96px; height: 96px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line, #d5dbe3); display: block; }
+.rating { margin-top: 10px; display: grid; gap: 6px; max-width: 320px; }
+.stars { display: flex; gap: 6px; }
+.star { min-width: 44px; min-height: 44px; border-radius: 6px; border: 1px solid var(--gate); background: transparent; color: var(--gate); font: inherit; font-weight: 600; cursor: pointer; }
+.star.on { background: var(--gate); color: #fff; }
+.rating-comment { min-height: 44px; padding: 0 10px; font: inherit; border: 1px solid var(--gate); border-radius: 6px; }
+.home-card { margin: 12px 0 0; font-size: 16px; }
+.home-card a { font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; }
