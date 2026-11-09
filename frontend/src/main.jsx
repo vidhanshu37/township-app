@@ -9,3 +9,12 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 );
+
+// Only in the built app. In development a cached shell would hide your changes.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* the app works fine without it */
+    });
+  });
+}

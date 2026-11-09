@@ -6,6 +6,12 @@ import Dues from './pages/resident/Dues.jsx';
 import Ledger from './pages/resident/Ledger.jsx';
 import Complaints from './pages/resident/Complaints.jsx';
 import Receipt from './pages/resident/Receipt.jsx';
+import Dashboard from './pages/committee/Dashboard.jsx';
+import Billing from './pages/helpdesk/Billing.jsx';
+import Statements from './pages/helpdesk/Statements.jsx';
+import Payments from './pages/helpdesk/Payments.jsx';
+import ComplaintQueue from './pages/helpdesk/ComplaintQueue.jsx';
+import ComplaintDetail from './pages/helpdesk/ComplaintDetail.jsx';
 
 // Only lets the right role through; everyone else is sent to sign in or to their own home.
 function RequireRole({ role }) {
@@ -61,17 +67,18 @@ export default function App() {
 
           <Route element={<RequireRole role="HELP_DESK" />}>
             <Route element={<AppShell />}>
-              <Route path="/helpdesk" element={
-                <StaffHome title="Help desk">Statement upload, the review queue and complaints are built in the next steps.</StaffHome>
-              } />
+              <Route path="/helpdesk" element={<Navigate to="/helpdesk/statements" replace />} />
+              <Route path="/helpdesk/statements" element={<Statements />} />
+              <Route path="/helpdesk/payments" element={<Payments />} />
+              <Route path="/helpdesk/billing" element={<Billing />} />
+              <Route path="/helpdesk/complaints" element={<ComplaintQueue />} />
+              <Route path="/helpdesk/complaints/:id" element={<ComplaintDetail />} />
             </Route>
           </Route>
 
           <Route element={<RequireRole role="COMMITTEE" />}>
             <Route element={<AppShell />}>
-              <Route path="/committee" element={
-                <StaffHome title="Committee">The dashboard is built in a later step.</StaffHome>
-              } />
+              <Route path="/committee" element={<Dashboard />} />
             </Route>
           </Route>
 

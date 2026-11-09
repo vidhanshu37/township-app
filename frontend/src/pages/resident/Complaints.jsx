@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../api.js';
 import { Loading, Notice } from '../../components/ui.jsx';
 import { formatDateTime, humanize } from '../../format.js';
@@ -55,11 +56,14 @@ function ComplaintForm({ onCreated }) {
   );
 }
 
-export function ComplaintRow({ c }) {
+export function ComplaintRow({ c, to }) {
   return (
     <li className="row complaint">
       <div>
-        <div className="row-title">#{c.id} · {humanize(c.category)}</div>
+        <div className="row-title">
+          {to ? <Link to={to}>#{c.id} · {humanize(c.category)}</Link> : <>#{c.id} · {humanize(c.category)}</>}
+          {to ? <span className="row-sub"> Flat {c.flatNo}</span> : null}
+        </div>
         <p className="complaint-text">{c.text}</p>
         <div className="row-sub">{formatDateTime(c.createdAt)}</div>
         {c.duplicateOf ? <div className="row-sub">Linked to complaint #{c.duplicateOf}, which is already being handled.</div> : null}
