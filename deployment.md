@@ -16,6 +16,8 @@ Only names are listed here. Copy `.env.example` to `.env` and fill in the values
 | `JWT_SECRET` | Secret that signs login tokens. At least 32 characters |
 | `PAYMENT_WEBHOOK_SECRET` | Secret that signs the payment webhook |
 | `APP_DEMO_MODE` | `true` shows the OTP on screen and in the API response. Use `false` for anything real |
+| `AI_API_KEY` | Optional. Key for the AI that sorts complaints (Groq, free at console.groq.com). Empty means keyword rules only; the app works fully either way |
+| `AI_MODEL` | Optional. Default `llama-3.3-70b-versatile`. `AI_BASE_URL` (default Groq) and `AI_TIMEOUT_MS` (default 5000) also exist |
 
 With Docker (option A) `DB_URL` is set by `docker-compose.full.yml`; the other five values come from `.env`.
 

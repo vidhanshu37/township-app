@@ -1,5 +1,6 @@
 package com.township.backend.reconciliation;
 
+import com.township.backend.matching.UpiId;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class ReviewService {
                           String utr, String status, Long flatId, String flatNo, int score, String reasons,
                           String note, String resolutionNote, String paymentId, String paymentStatus) {}
 
-    private record Row(BigDecimal amount, int score) {}
+    private record Row(BigDecimal amount, int score, String narration) {}
 
     private static final Set<String> STATUSES =
             Set.of("AUTO_MATCHED", "NEEDS_REVIEW", "UNMATCHED", "CONFIRMED", "REJECTED");
@@ -55,13 +56,16 @@ public class ReviewService {
                         SET status = 'CONFIRMED', flat_id = :f, resolved_by = :u, resolved_at = now(),
                             resolution_note = :n
                         WHERE id = :id AND status IN ('NEEDS_REVIEW', 'UNMATCHED')
-                        RETURNING amount, score""")
+                        RETURNING amount, score, narration""")
                 .param("f", flatId).param("u", actorId).param("n", note, java.sql.Types.VARCHAR).param("id", txnId)
-                .query((rs, i) -> new Row(rs.getBigDecimal("amount"), rs.getInt("score")))
+                .query((rs, i) -> new Row(rs.getBigDecimal("amount"), rs.getInt("score"), rs.getString("narration")))
                 .optional()
                 .orElseThrow(() -> notResolvable(txnId));
 
         reconciliation.postBankPayment(txnId, flatId, row.amount(), actorId, row.score(), "BANK_CONFIRMED");
+        for (String upiId : UpiId.extract(row.narration())) {
+            jdbc.sql(UpiSql.LEARN).param("f", flatId).param("u", upiId).update();
+        }
         return get(txnId);
     }
 

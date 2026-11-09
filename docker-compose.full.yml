@@ -1,4 +1,4 @@
-#  docker compose -f docker-compose.full.yml up --build
+# docker compose -f docker-compose.full.yml up --build
 services:
   db:
     image: postgres:16
@@ -21,12 +21,15 @@ services:
       db:
         condition: service_healthy
     environment:
+      # Inside Docker the database host is "db", not localhost.
       DB_URL: jdbc:postgresql://db:5432/township
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET}
       APP_DEMO_MODE: ${APP_DEMO_MODE:-true}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-llama-3.3-70b-versatile}
     restart: unless-stopped
 
   frontend:

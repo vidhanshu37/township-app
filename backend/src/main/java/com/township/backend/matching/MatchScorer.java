@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 public final class MatchScorer {
+
     public static final int W_REFERENCE = 40;
     public static final int W_FLAT = 30;
     public static final int W_AMOUNT = 20;
@@ -23,9 +24,16 @@ public final class MatchScorer {
         int total = 0;
         List<String> why = new ArrayList<>();
 
-        if (flat.payRef() != null && contains(text, flat.payRef())) {
+        String upiHit = flat.upiIds().stream().filter(u -> UpiId.appearsIn(row.narration(), u)).findFirst().orElse(null);
+        boolean refHit = flat.payRef() != null && contains(text, flat.payRef());
+        if (refHit || upiHit != null) {
             total += W_REFERENCE;
-            why.add("reference " + flat.payRef() + " found (+" + W_REFERENCE + ")");
+            if (refHit) {
+                why.add("reference " + flat.payRef() + " found (+" + W_REFERENCE + ")");
+            }
+            if (upiHit != null) {
+                why.add("UPI ID " + upiHit + " found" + (refHit ? "" : " (+" + W_REFERENCE + ")"));
+            }
         }
         if (flatNoFound(text, flat.flatNo())) {
             total += W_FLAT;

@@ -19,23 +19,23 @@ import java.util.List;
 @RestController
 public class ComplaintController {
 
-    public record CreateComplaint(@NotBlank @Size(min = 10, max = 1000) String text) {
-    }
-
-    public record ChangeStatus(@NotBlank String status, @Size(max = 200) String note) {
-    }
+    public record CreateComplaint(@NotBlank @Size(min = 10, max = 1000) String text) {}
+    public record ChangeStatus(@NotBlank String status, @Size(max = 200) String note) {}
 
     private final ComplaintService complaints;
+    private final TriageService triage;
 
-    public ComplaintController(ComplaintService complaints) {
+    public ComplaintController(ComplaintService complaints, TriageService triage) {
         this.complaints = complaints;
+        this.triage = triage;
     }
 
     @PostMapping("/api/resident/complaints")
     @ResponseStatus(HttpStatus.CREATED)
     public ComplaintService.ComplaintView create(@Valid @RequestBody CreateComplaint body,
                                                  @AuthenticationPrincipal Jwt jwt) {
-        return complaints.create(flatId(jwt), Long.parseLong(jwt.getSubject()), body.text());
+        TriageEngine.Result result = triage.classify(body.text().trim());
+        return complaints.create(flatId(jwt), Long.parseLong(jwt.getSubject()), body.text(), result);
     }
 
     @GetMapping("/api/resident/complaints")

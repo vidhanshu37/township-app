@@ -7,14 +7,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-
 public final class TriageEngine {
 
     public enum Category { PLUMBING, ELECTRICAL, LIFT, SECURITY, SAFETY, HOUSEKEEPING, PARKING, NOISE, OTHER }
 
     public enum Priority { HIGH, MEDIUM, LOW }
 
-    public enum Source { SAFETY_RULE, KEYWORD, FALLBACK }
+    public enum Source { SAFETY_RULE, KEYWORD, FALLBACK, LLM }
 
     public record Result(Category category, Priority priority, Source source, String reason) {}
 

@@ -184,10 +184,18 @@ public class ReconciliationService {
                     return flatId;
                 }).list();
 
+        Map<Long, List<String>> upi = new LinkedHashMap<>();
+        jdbc.sql(UpiSql.LOAD)
+                .param("f", onlyFlat, Types.BIGINT)
+                .query((rs, n) -> {
+                    upi.computeIfAbsent(rs.getLong("flat_id"), k -> new ArrayList<>()).add(rs.getString("upi_id"));
+                    return 0;
+                }).list();
+
         List<FlatSnapshot> out = new ArrayList<>();
         for (FlatRow f : flats) {
             out.add(new FlatSnapshot(f.id(), f.flatNo(), f.payRef(), f.names(),
-                    open.getOrDefault(f.id(), List.of()), oldest.get(f.id())));
+                    open.getOrDefault(f.id(), List.of()), oldest.get(f.id()), upi.getOrDefault(f.id(), List.of())));
         }
         return out;
     }

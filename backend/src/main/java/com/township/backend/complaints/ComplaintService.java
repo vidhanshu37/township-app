@@ -22,15 +22,12 @@ public class ComplaintService {
 
     public record ComplaintView(long id, long flatId, String flatNo, String text, String category, String priority,
                                 String status, String triageSource, String triageReason, Long duplicateOf,
-                                Long assignedTo, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
-    }
+                                Long assignedTo, OffsetDateTime createdAt, OffsetDateTime updatedAt) {}
 
     public record EventView(String eventType, String fromStatus, String toStatus, String note, Long actorId,
-                            OffsetDateTime createdAt) {
-    }
+                            OffsetDateTime createdAt) {}
 
-    public record Detail(ComplaintView complaint, List<EventView> events) {
-    }
+    public record Detail(ComplaintView complaint, List<EventView> events) {}
 
     private static final Map<String, Set<String>> TRANSITIONS = Map.of(
             "OPEN", Set.of("IN_PROGRESS", "RESOLVED"),
@@ -49,12 +46,11 @@ public class ComplaintService {
     }
 
     @Transactional
-    public ComplaintView create(long flatId, long userId, String rawText) {
+    public ComplaintView create(long flatId, long userId, String rawText, TriageEngine.Result triage) {
         String text = rawText == null ? "" : rawText.trim();
         if (text.length() < 10 || text.length() > 1000) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Complaint must be 10 to 1000 characters");
         }
-        TriageEngine.Result triage = TriageEngine.classify(text);
 
         Map<Long, Long> parentOf = new HashMap<>();
         List<DuplicateFinder.Candidate> open = jdbc.sql("""
@@ -144,11 +140,11 @@ public class ComplaintService {
     public List<ComplaintView> listAll(String status, String priority, String category, int limit, int offset) {
         int safeLimit = Math.min(Math.max(limit, 1), 200);
         return jdbc.sql(SELECT + " " + """
-                        WHERE (CAST(:s AS VARCHAR) IS NULL OR c.status = CAST(:s AS VARCHAR))
-                          AND (CAST(:p AS VARCHAR) IS NULL OR c.priority = CAST(:p AS VARCHAR))
-                          AND (CAST(:c AS VARCHAR) IS NULL OR c.category = CAST(:c AS VARCHAR))
-                        ORDER BY CASE c.priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, c.created_at
-                        LIMIT :l OFFSET :o""")
+                         WHERE (CAST(:s AS VARCHAR) IS NULL OR c.status = CAST(:s AS VARCHAR))
+                           AND (CAST(:p AS VARCHAR) IS NULL OR c.priority = CAST(:p AS VARCHAR))
+                           AND (CAST(:c AS VARCHAR) IS NULL OR c.category = CAST(:c AS VARCHAR))
+                         ORDER BY CASE c.priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, c.created_at
+                         LIMIT :l OFFSET :o""")
                 .param("s", status, Types.VARCHAR).param("p", priority, Types.VARCHAR)
                 .param("c", category, Types.VARCHAR).param("l", safeLimit).param("o", Math.max(offset, 0))
                 .query(ComplaintService::view).list();
